@@ -1,0 +1,11 @@
+# Secrets - never commit your API key
+.env
+
+# Personal data
+memory.json
+notes.txt
+
+# Python
+venv/
+__pycache__/
+*.pyc

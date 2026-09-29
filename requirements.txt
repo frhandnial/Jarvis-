@@ -1,0 +1,6 @@
+python-dotenv
+SpeechRecognition
+pyaudio
+edge-tts
+pygame
+pyttsx3
