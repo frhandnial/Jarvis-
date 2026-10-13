@@ -4,8 +4,12 @@
 # Personal data
 memory.json
 notes.txt
+timetable*.xlsx
 
 # Python
 venv/
 __pycache__/
 *.pyc
+
+# Logs
+jarvis.log

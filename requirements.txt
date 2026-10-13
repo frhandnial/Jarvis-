@@ -1,6 +1,8 @@
 python-dotenv
 SpeechRecognition
-pyaudio
+PyAudioWPatch
 edge-tts
-pygame
+pygame-ce
 pyttsx3
+openpyxl
+tzdata

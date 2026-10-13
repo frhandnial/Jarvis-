@@ -4,6 +4,7 @@ import os
 import urllib.error
 import urllib.request
 
+import events
 import tools
 
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -108,6 +109,7 @@ def ask(model, api_key, system_prompt, history, user_text):
         for call in calls:
             args = call.get("args") or {}
             print("  [tool] {}({})".format(call["name"], args))
+            events.emit("tool", call["name"])
             result = tools.run_tool(call["name"], args)
             responses.append({"functionResponse": {"name": call["name"], "response": {"result": result}}})
         history.append({"role": "user", "parts": responses})

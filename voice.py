@@ -2,6 +2,7 @@
 import asyncio
 import os
 import re
+import sys
 import tempfile
 import time
 import uuid
@@ -9,9 +10,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
-# Avoids a noisy "Event loop is closed" error on exit with Python 3.8 on Windows
-if os.name == "nt":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+# speech_recognition needs "pyaudio". PyAudio has no Python 3.14 build yet, so use its
+# drop-in fork PyAudioWPatch under the same name.
+try:
+    import pyaudio  # noqa: F401
+except ImportError:
+    import pyaudiowpatch
+    sys.modules["pyaudio"] = pyaudiowpatch
 
 # British male voice - fits JARVIS. Other options: en-GB-ThomasNeural, en-US-GuyNeural
 VOICE = os.getenv("JARVIS_VOICE", "en-GB-RyanNeural")

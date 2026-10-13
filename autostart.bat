@@ -1,5 +1,5 @@
 @echo off
-rem Launched by Windows at login. Waits for the internet to come up, then starts JARVIS.
+rem Launched by Windows at login, unlock and wake. Waits for the internet, then opens the JARVIS window.
 cd /d "%~dp0"
 title JARVIS
 echo Waiting for internet connection...
@@ -9,5 +9,4 @@ if errorlevel 1 (
     timeout /t 5 /nobreak >nul
     goto waitnet
 )
-call venv\Scripts\activate.bat
-python jarvis.py
+start "" "%~dp0venv\Scripts\pythonw.exe" "%~dp0jarvis.py"
