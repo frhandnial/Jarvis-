@@ -23,15 +23,18 @@ A voice assistant powered by Google Gemini (free tier).
 - Take and read notes (`notes.txt`)
 - Tell you today's university classes at startup, and answer "what classes do I have on Monday?"
   (reads `timetable.xlsx` in this folder, UK time; replace that file when you get a new timetable)
+- Show today's mosque prayer times (start and iqamah, next prayer highlighted with a countdown) and answer
+  "when is Asr?" (reads `prayer_times.csv`, converted from the mosque's annual timetable PDF; the same file works every year)
 
 ## Files
 | File | What it does |
 |---|---|
 | `jarvis.py` | Main loop and personality (edit `SYSTEM_PROMPT` to change him) |
 | `brain.py` | Talks to Gemini and runs the tools it asks for |
-| `gui.py` | The on-screen HUD (weekly timetable hologram, animated face, clock, today's classes, conversation, typing box) |
+| `gui.py` | The on-screen HUD (weekly timetable hologram, animated face, clock, today's classes, prayer times, conversation, typing box) |
 | `events.py` | Passes messages from the voice thread to the window |
 | `timetable.py` | Reads `timetable.xlsx` and works out today's classes (UK time) |
+| `prayers.py` | Reads `prayer_times.csv` and works out today's prayer times and the next prayer (UK time) |
 | `voice.py` | Listening (Google speech recognition) and speaking (edge-tts) |
 | `tools.py` | Actions he can take. Add new ones here |
 | `memory.py` | Long-term memory |

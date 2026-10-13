@@ -13,6 +13,7 @@ import tkinter as tk
 import tkinter.font as tkfont
 
 import events
+import prayers
 import timetable
 import tools
 
@@ -94,6 +95,7 @@ class Hud(tk.Tk):
         self.after(50, self._poll_events)
         self.after(200, self._tick_clock)
         self.after(300, self._refresh_today)
+        self.after(300, self._refresh_prayers)
         threading.Thread(target=self._load_weather, daemon=True).start()
 
     # ---------------- layout ----------------
@@ -209,7 +211,7 @@ class Hud(tk.Tk):
     def _build_right(self, body):
         col = tk.Frame(body, bg=BG)
         col.grid(row=0, column=1, sticky="nsew")
-        col.rowconfigure(1, weight=1)
+        col.rowconfigure(2, weight=1)
         col.columnconfigure(0, weight=1)
 
         today = self._panel(col, "TODAY")
@@ -225,8 +227,10 @@ class Hud(tk.Tk):
         self.classes.tag_configure("time", foreground=CYAN)
         self.classes.tag_configure("note", foreground=MUTED, font=(HEAD, 9))
 
+        self._build_prayers(col)
+
         convo = self._panel(col, "CONVERSATION")
-        convo.grid(row=1, column=0, sticky="nsew")
+        convo.grid(row=2, column=0, sticky="nsew")
         entry_row = tk.Frame(convo, bg=PANEL)
         entry_row.pack(side="bottom", fill="x", padx=12, pady=(0, 12))  # before the log, so it always shows
         wrap = tk.Frame(convo, bg=PANEL)
@@ -253,6 +257,26 @@ class Hud(tk.Tk):
         self._show_placeholder()
         self.entry.bind("<FocusIn>", lambda e: self._clear_placeholder())
         self.entry.bind("<FocusOut>", lambda e: self._show_placeholder())
+
+    def _build_prayers(self, col):
+        """Small prayer-times strip: a tile per prayer with its start and iqamah, the next one lit green."""
+        box = self._panel(col, "PRAYER TIMES")
+        box.grid(row=1, column=0, sticky="ew", pady=(0, int(12 * self.s)))
+        self.prayer_note = tk.Label(box, bg=PANEL, fg=GREEN, font=(HEAD, 9, "bold"))
+        self.prayer_note.place(relx=1.0, x=-12, y=11, anchor="ne")  # countdown, right of the title
+        row = tk.Frame(box, bg=PANEL)
+        row.pack(fill="x", padx=9, pady=(8, 12))
+        self.prayer_tiles = []
+        for i in range(len(prayers.PRAYERS)):
+            row.columnconfigure(i, weight=1, uniform="prayer")
+            tile = tk.Frame(row, bg=PANEL, highlightthickness=1, highlightbackground=PANEL_EDGE)
+            tile.grid(row=0, column=i, sticky="ew", padx=3)
+            name, start, sub = [tk.Label(tile, bg=PANEL, font=f)
+                                for f in ((HEAD, 8, "bold"), (HEAD, 14), (HEAD, 8))]
+            name.pack(pady=(5, 0))
+            start.pack()
+            sub.pack(pady=(0, 5))
+            self.prayer_tiles.append((tile, name, start, sub))
 
     def _dark_title_bar(self):
         """Windows 10/11: make the title bar dark to match the HUD."""
@@ -414,6 +438,38 @@ class Hud(tk.Tk):
             t.insert("end", "Timetable error: {}".format(e), "note")
         t.configure(state="disabled")
         self.after(30000, self._refresh_today)
+
+    def _refresh_prayers(self):
+        """Today's prayer tiles (tomorrow's once Isha's iqamah has passed): done = faded, next = green."""
+        try:
+            now = timetable.uk_now()
+            day, found, nxt = prayers.upcoming(now)
+            if not found:
+                note = "NO PRAYER FILE (prayer_times.csv)"
+            elif nxt["start"] > now:
+                note = "{}  ·  {} IN {}".format("TODAY" if day == now.date() else "TOMORROW", nxt["name"],
+                                                prayers.until(nxt["start"], now))
+            else:
+                note = "{} STARTED  ·  IQAMAH IN {}".format(nxt["name"], prayers.until(nxt["iqamah"], now))
+            self.prayer_note.configure(text=note.upper(), fg=GREEN if found else MUTED)
+            for i, (tile, name, start, sub) in enumerate(self.prayer_tiles):
+                p = found[i] if found else None
+                if p is nxt and p:
+                    bg, edge, inks = blend(PANEL, GREEN, 0.1), GREEN, (GREEN, TEXT, blend(GREEN, PANEL, 0.25))
+                elif p and (p["iqamah"] or p["start"]) <= now:
+                    faded = blend(TEXT, PANEL, 0.55)
+                    bg, edge, inks = PANEL, PANEL_EDGE, (faded, faded, faded)
+                else:
+                    bg, edge, inks = PANEL, PANEL_EDGE, (CYAN, TEXT, MUTED)
+                tile.configure(bg=bg, highlightbackground=edge)
+                texts = (p["name"].upper(), p["start"].strftime("%H:%M"),
+                         "IQAMAH " + p["iqamah"].strftime("%H:%M") if p["iqamah"] else "FAJR ENDS"
+                         ) if p else (prayers.PRAYERS[i][1].upper(), "--:--", "")
+                for label, text, ink in zip((name, start, sub), texts, inks):
+                    label.configure(text=text, fg=ink, bg=bg)
+        except Exception as e:
+            self.prayer_note.configure(text="PRAYER TIMES ERROR: {}".format(e), fg=RED)
+        self.after(5000, self._refresh_prayers)
 
     # ---------------- week hologram ----------------
     def _draw_week(self):

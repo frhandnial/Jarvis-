@@ -12,6 +12,7 @@ import urllib.request
 import webbrowser
 
 import memory
+import prayers
 import timetable
 
 NOTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notes.txt")
@@ -139,6 +140,19 @@ TOOL_DEFINITIONS = [
         "name": "get_classes",
         "description": "Get the user's university classes (University of Sheffield timetable, UK time) for one day: "
                        "how many, times, module, activity, location and lecturer.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"day": {"type": "string",
+                                   "description": "'today', 'tomorrow', 'yesterday', a weekday like 'friday' or "
+                                                  "'next monday', or a date YYYY-MM-DD"}},
+            "required": ["day"],
+        },
+    },
+    {
+        "name": "get_prayer_times",
+        "description": "Get the user's local mosque prayer times (UK time) for one day: start and iqamah (congregation) "
+                       "times for Fajr, Dhuhr (Jumu'ah on Fridays), Asr, Maghrib and Isha, plus sunrise, and for today "
+                       "how long until the next prayer.",
         "input_schema": {
             "type": "object",
             "properties": {"day": {"type": "string",
@@ -416,6 +430,7 @@ _HANDLERS = {
     "write_note": write_note,
     "read_notes": read_notes,
     "get_classes": timetable.get_classes,
+    "get_prayer_times": prayers.get_prayer_times,
     "find_files": find_files,
     "open_path": open_path,
     "recent_files": recent_files,
